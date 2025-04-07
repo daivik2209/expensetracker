@@ -7,16 +7,12 @@ import matplotlib.pyplot as plt
 CSV_FILE = "tickets.csv"
 
 # Load existing data or create new
-if os.path.exists(CSV_FILE) and os.stat(CSV_FILE).st_size > 0:
-    try:
-        df = pd.read_csv(CSV_FILE)
-        required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
-        for col in required_columns:
-            if col not in df.columns:
-                df[col] = None
-    except pd.errors.EmptyDataError:
-        df = pd.DataFrame(columns=["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"])
-        df.to_csv(CSV_FILE, index=False)
+if os.path.exists(CSV_FILE):
+    df = pd.read_csv(CSV_FILE)
+    required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = None
 else:
     df = pd.DataFrame(columns=["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"])
     df.to_csv(CSV_FILE, index=False)
