@@ -7,12 +7,16 @@ import matplotlib.pyplot as plt
 CSV_FILE = "tickets.csv"
 
 # Load existing data or create new
-if os.path.exists(CSV_FILE):
-    df = pd.read_csv(CSV_FILE)
-    required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
-    for col in required_columns:
-        if col not in df.columns:
-            df[col] = None
+if os.path.exists(CSV_FILE) and os.stat(CSV_FILE).st_size > 0:
+    try:
+        df = pd.read_csv(CSV_FILE)
+        required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
+        for col in required_columns:
+            if col not in df.columns:
+                df[col] = None
+    except pd.errors.EmptyDataError:
+        df = pd.DataFrame(columns=["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"])
+        df.to_csv(CSV_FILE, index=False)
 else:
     df = pd.DataFrame(columns=["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"])
     df.to_csv(CSV_FILE, index=False)
@@ -43,28 +47,31 @@ st.dataframe(df)
 total_profit = df["Profit"].sum()
 st.subheader(f"💰 Total Profit: ₹{total_profit:.2f}")
 
-# ---- 📊 NEW GRAPHS ----
+# ---- 📊 Graphs ----
 if not df.empty:
     st.subheader("📈 Profit Trends & Insights")
 
-    # 📌 Profit Trend Over Time (Line Chart)
-    st.subheader("📉 Profit Trend Over Time")
+    # 📉 Profit Trend Over Time
     df["Cumulative Profit"] = df["Profit"].cumsum()
     st.line_chart(df["Cumulative Profit"])
 
-    # 📌 Match-wise Sales & Profit (Bar Chart)
-    st.subheader("🏟️ Match-wise Sales & Profit")
+    # 🏟️ Match-wise Sales & Profit
     match_summary = df.groupby("Match")[["Selling Price", "Profit"]].sum().reset_index()
     st.bar_chart(match_summary.set_index("Match"))
 
-    # 📌 Stand-wise Profit Comparison (Bar Chart)
-    st.subheader("📊 Stand-wise Profit Comparison")
+    # 📊 Stand-wise Profit Comparison
     stand_summary = df.groupby("Stand")["Profit"].sum().reset_index()
     st.bar_chart(stand_summary.set_index("Stand"))
 
-    # 📌 Pie Chart: Profit Distribution Across Matches
-    st.subheader("🎯 Profit Distribution Across Matches")
+    # 🎯 Profit Distribution (Pie)
     fig, ax = plt.subplots()
     df.groupby("Match")["Profit"].sum().plot(kind="pie", autopct="%1.1f%%", ax=ax)
-    ax.set_ylabel("")  # Hide y-label
+    ax.set_ylabel("")
     st.pyplot(fig)
+
+    # 🚨 RESET DATA BUTTON
+    st.warning("⚠️ After viewing, click below to reset all data.")
+    if st.button("🔄 Reset Tracker"):
+        df = pd.DataFrame(columns=df.columns)
+        df.to_csv(CSV_FILE, index=False)
+        st.success("✅ All data erased! Ready to start fresh.")
