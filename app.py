@@ -7,14 +7,18 @@ import matplotlib.pyplot as plt
 CSV_FILE = "tickets.csv"
 
 # Load existing data or create new
+required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
+
 if os.path.exists(CSV_FILE):
     df = pd.read_csv(CSV_FILE)
-    required_columns = ["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"]
+    # Clean up any unwanted columns like "Unnamed: 0"
+    df = df[[col for col in df.columns if col in required_columns]]
+    # Add missing columns if needed
     for col in required_columns:
         if col not in df.columns:
             df[col] = None
 else:
-    df = pd.DataFrame(columns=["Match", "Stand", "Purchase Price", "Selling Price", "Quantity", "Profit"])
+    df = pd.DataFrame(columns=required_columns)
     df.to_csv(CSV_FILE, index=False)
 
 st.title("🏏 IPL Ticket Expense & Profit Tracker")
@@ -30,7 +34,7 @@ quantity = st.sidebar.number_input("Quantity", min_value=1, step=1)
 if st.sidebar.button("Add Ticket"):
     profit = (selling_price - purchase_price) * quantity
     new_data = pd.DataFrame([[match, stand, purchase_price, selling_price, quantity, profit]], 
-                            columns=df.columns)
+                            columns=required_columns)
     df = pd.concat([df, new_data], ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
     st.sidebar.success("✅ Ticket added successfully!")
@@ -65,9 +69,13 @@ if not df.empty:
     ax.set_ylabel("")
     st.pyplot(fig)
 
+    # 💾 Download CSV
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button("📥 Download CSV", data=csv, file_name="tickets.csv", mime="text/csv")
+
     # 🚨 RESET DATA BUTTON
     st.warning("⚠️ After viewing, click below to reset all data.")
     if st.button("🔄 Reset Tracker"):
-        df = pd.DataFrame(columns=df.columns)
+        df = pd.DataFrame(columns=required_columns)
         df.to_csv(CSV_FILE, index=False)
         st.success("✅ All data erased! Ready to start fresh.")
