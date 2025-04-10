@@ -33,8 +33,15 @@ quantity = st.sidebar.number_input("Quantity", min_value=1, step=1)
 
 if st.sidebar.button("Add Ticket"):
     profit = (selling_price - purchase_price) * quantity
-    new_data = pd.DataFrame([[match, stand, purchase_price, selling_price, quantity, profit]], 
-                            columns=required_columns)
+    new_row = {
+        "Match": match,
+        "Stand": stand,
+        "Purchase Price": purchase_price,
+        "Selling Price": selling_price,
+        "Quantity": quantity,
+        "Profit": profit
+    }
+    new_data = pd.DataFrame([new_row])
     df = pd.concat([df, new_data], ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
     st.sidebar.success("✅ Ticket added successfully!")
